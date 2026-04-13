@@ -39,6 +39,8 @@
 	var DOcMenableScreenshot = null;
 	var DOscreenshotBox = null;
 	var DOscreenshotImg = null;
+	var DOconnectionLostDiv = null;
+	var DOconnectionLostSpan = null;
 
 	// Screenshot stuff
 	var screenShotIntervalId = null;
@@ -93,6 +95,8 @@
 		DOcMenableScreenshot = document.getElementById("cMenableScreenshot");
 		DOscreenshotBox = document.getElementById("screenshotBox");
 		DOscreenshotImg = document.getElementById("screenshotImg");
+		DOconnectionLostDiv = document.getElementById("connectionLostDiv");
+		DOconnectionLostSpan = document.getElementById("connectionLostSpan");
 		
 		// Show https warning if page was loaded over https
 		if (window.location.protocol == "https:") {
@@ -158,6 +162,8 @@
 	obs.on("ConnectionClosed", () => {
 		console.log("Connection to obs-websocket was closed");
 		connectionIsOpen = false;
+		DOconnectionLostDiv.style.display = "block";
+		DOconnectionLostSpan.style.display = "block";
 		if (!reconnectInt) reconnectInt = setInterval(attemptObsConnection, 2000);
 		// Maybe show somewhere that the connection was disconnected and status might not beaccurate
 	});
@@ -176,6 +182,10 @@
 
 			// Hide connection settings box
 			DOsettingsBox.style.display = "none";
+
+			// Hide connection lost message
+			DOconnectionLostDiv.style.display = "none";
+			DOconnectionLostSpan.style.display = "none";
 
 			// Get initial states
 			await getInitialObsStates();
@@ -709,6 +719,23 @@ body {
 	font-size: 3em;
 }
 
+#connectionLostDiv, #connectionLostSpan {
+	color: orange;
+	background-color: darkblue;
+	font-size: 3em;
+	font-weight: bold;
+	/*display: none;*/
+}
+
+#connectionLostDiv {
+	position: absolute;
+	top: 50vh;
+	margin: 0 auto;
+	width: 100%;
+	text-align: center;
+	/*display: none;*/
+}
+
 button {
 	margin: 8px;
 	font-size: 1.5em;
@@ -795,8 +822,11 @@ input {
 	<div id="selectionBox"></div>
 	<div id="selectedTitleBox">
 		<span id="selectedTitleText"></span>
+		<div id="connectionLostDiv">Connection lost!<br/>Trying to reconnect...<br/>(Reload if this message persists)
+		</div>
 	</div>
 	<div id="srStatusBox">
+		<span id="connectionLostSpan">Connection lost!<br/>Trying to reconnect...<br/>(Reload if this message persists)</span>
 		<span id="srStatusText"></span>
 	</div>
 </body>
