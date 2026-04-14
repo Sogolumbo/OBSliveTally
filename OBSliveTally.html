@@ -165,8 +165,15 @@
 		DOconnectionLostDiv.style.display = "block";
 		DOconnectionLostSpan.style.display = "block";
 		if (!reconnectInt) reconnectInt = setInterval(attemptObsConnection, 2000);
-		// Maybe show somewhere that the connection was disconnected and status might not beaccurate
 	});
+
+	obs.on("ConnectionError", ()=> {
+		console.log("Connection to obs-websocket was closed due to an error");
+		connectionIsOpen = false;
+		DOconnectionLostDiv.style.display = "block";
+		DOconnectionLostSpan.style.display = "block";
+		if (!reconnectInt) reconnectInt = setInterval(attemptObsConnection, 2000);
+	})
 
 	// Identified is the new open
 	obs.on("Identified", async () => {
