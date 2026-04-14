@@ -25,6 +25,11 @@
 	var iCanHazLocalStorage = typeof(localStorage)  == "undefined" ? false : true;
 	var obsDefaultSettings = structuredClone(obsSettings);
 
+	// Ping related
+	var lastPong = 0;
+	var pingSender = null;
+
+
 	// DOm objects
 	var DOobsHost = null;
 	var DOobsPw = null;
@@ -164,8 +169,8 @@
 		connectionIsOpen = false;
 		DOconnectionLostDiv.style.display = "block";
 		DOconnectionLostSpan.style.display = "block";
+		if (pingSender) clearInterval(pingSender);
 		if (!reconnectInt) reconnectInt = setInterval(attemptObsConnection, 2000);
-		// Maybe show somewhere that the connection was disconnected and status might not beaccurate
 	});
 
 	// Identified is the new open
@@ -189,6 +194,18 @@
 
 			// Get initial states
 			await getInitialObsStates();
+
+			// Ping OBS in order to detect connection loss
+			lastPong = Date.now();
+            pingSender = setInterval(() => {
+                console.debug("Sending ping frame");
+                obs.socket.ping();
+                if (Date.now() - lastPong > 21000) obs.disconnect();
+            }, 10000);
+            obs.socket.on("pong", () => {
+                console.debug("Recv websocket pong frame");
+                lastPong = Date.now();
+            });
 
 			// If session restore is enabled, try it
 			if (localStorage.getItem("connect.restore") == "Yes") restoreWatchStatus();
