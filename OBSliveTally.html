@@ -151,6 +151,7 @@
 		obsSettings.password = decodeURIComponent(DOobsPw.value);
 
 		// The connect
+		console.debug("Attempting obs connection");
 		try {
 			const {
 				obsWebSocketVersion,
@@ -175,7 +176,33 @@
 
 	async function pingGetStat(){
 		console.debug("Sending ping");
-		obs.call("GetStat");
+		Promise.race([
+			obs.call("GetStats"),
+			new Promise ((_, fail) => setTimeout(() => fail("Timeout"), 5000))
+		]).then(
+			(res) => {
+				console.debug("Received pong");
+			},
+			(err) => {
+			if (err == "Timeout"){
+				console.error("Ping timeout (connection lost).");
+				if (pingSender) clearInterval(pingSender);
+
+				// Is this necessary / sufficient?
+				obs.socket.close();
+				obs.cleanup();
+				
+				connectionIsOpen = false;
+				DOconnectionLostDiv.style.display = "block";
+				DOconnectionLostSpan.style.display = "block";
+
+				if (!reconnectInt) reconnectInt = setInterval(attemptObsConnection, 2000);
+			}
+			else{
+				console.log("Ping error:");
+				console.error(err);
+			}
+		});
 
 		/*() => {
                 console.debug("Sending ping frame");
@@ -210,7 +237,7 @@
 
 			// Ping OBS in order to detect connection loss
 			lastPong = Date.now();
-            pingSender = setInterval(pingGetStat, 10000);
+            pingSender = setInterval(pingGetStat, 6000);
             /*obs.socket.on("pong", () => {
                 console.debug("Recv websocket pong frame");
                 lastPong = Date.now();
