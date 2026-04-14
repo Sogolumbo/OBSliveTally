@@ -158,22 +158,19 @@
 		}
 	}
 
-	// obs-websocket connection was closed for whatever reason
-	obs.on("ConnectionClosed", () => {
-		console.log("Connection to obs-websocket was closed");
+	function connectionClosed(reason){
+		console.log("Connection to obs-websocket was closed (Reason: '"+reason+"').");
 		connectionIsOpen = false;
 		DOconnectionLostDiv.style.display = "block";
 		DOconnectionLostSpan.style.display = "block";
 		if (!reconnectInt) reconnectInt = setInterval(attemptObsConnection, 2000);
-	});
+	}
 
-	obs.on("ConnectionError", ()=> {
-		console.log("Connection to obs-websocket was closed due to an error");
-		connectionIsOpen = false;
-		DOconnectionLostDiv.style.display = "block";
-		DOconnectionLostSpan.style.display = "block";
-		if (!reconnectInt) reconnectInt = setInterval(attemptObsConnection, 2000);
-	})
+	// obs-websocket connection was closed for whatever reason
+	obs.on("ConnectionClosed", connectionClosed("On->ConnectionClosed"));
+	obs.on("ConnectionError", connectionClosed("On->ConnectionError"));
+	obs.onClose(connectionClosed("onClose"));
+	obs.onError(connectionClosed("onError"));
 
 	// Identified is the new open
 	obs.on("Identified", async () => {
