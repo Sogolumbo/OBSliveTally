@@ -173,6 +173,19 @@
 		if (!reconnectInt) reconnectInt = setInterval(attemptObsConnection, 2000);
 	});
 
+	async function pingGetStat(){
+		console.debug("Sending ping");
+		obs.call("GetStat");
+
+		/*() => {
+                console.debug("Sending ping frame");
+				var answer = null;
+                obs.call("GetStats");
+                if (Date.now() - lastPong > 21000) obs.disconnect();
+            }
+		*/
+	}
+
 	// Identified is the new open
 	obs.on("Identified", async () => {
 			clearInterval(reconnectInt);
@@ -197,15 +210,11 @@
 
 			// Ping OBS in order to detect connection loss
 			lastPong = Date.now();
-            pingSender = setInterval(() => {
-                console.debug("Sending ping frame");
-                obs.socket.ping();
-                if (Date.now() - lastPong > 21000) obs.disconnect();
-            }, 10000);
-            obs.socket.on("pong", () => {
+            pingSender = setInterval(pingGetStat, 10000);
+            /*obs.socket.on("pong", () => {
                 console.debug("Recv websocket pong frame");
                 lastPong = Date.now();
-            });
+            });*/
 
 			// If session restore is enabled, try it
 			if (localStorage.getItem("connect.restore") == "Yes") restoreWatchStatus();
